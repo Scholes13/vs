@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Werkudara Voice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="firestore.js"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-center text-[#23428f] mb-8 font-montserrat">Speech to Text</h1>
+        
+        <div class="flex justify-center space-x-4 mb-4">
+            <button 
+                onclick="startRecording()" 
+                class="bg-[#23428f] hover:bg-[#23428f] text-white font-bold py-2 px-4 rounded shadow relative group">
+                Start Recording
+                <span class="absolute left-0 -bottom-1 w-full h-2 bg-blue-400 -z-10 group-hover:h-full group-hover:transition-all"></span>
+            </button>
+
+            <button 
+                onclick="stopRecording()" 
+                class="bg-[#23428f] hover:bg-[#23428f] text-white font-bold py-2 px-4 rounded shadow relative group">
+                Stop Recording
+                <span class="absolute left-0 -bottom-1 w-full h-2 bg-red-400 -z-10 group-hover:h-full group-hover:transition-all"></span>
+            </button>
+
+            <button 
+                onclick="clearText()" 
+                class="bg-[#23428f] hover:bg-[#23428f] text-white font-bold py-2 px-4 rounded shadow relative group">
+                Clear Text
+                <span class="absolute left-0 -bottom-1 w-full h-2 bg-gray-400 -z-10 group-hover:h-full group-hover:transition-all"></span>
+            </button>
+        </div>
+
+        <div class="flex justify-center space-x-4 mb-4">
+            <label for="fontSize" class="text-gray-700 font-bold">Font Size:</label>
+            <select id="fontSize" onchange="changeFontSize()" class="bg-white border border-gray-300 rounded shadow py-2 px-4">
+                <option value="10">10px</option>
+                <option value="15" selected>15px</option>
+                <option value="20">20px</option>
+                <option value="25">25px</option>
+                <option value="30">30px</option>
+                <option value="35">35px</option>
+                <option value="40">40px</option>
+            </select>
+        </div>
+
+        <div id="recordingNotification" class="hidden bg-red-500 text-white text-center py-2 rounded mb-4">
+            Recording is in progress...
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-4">
+            <p id="result" class="text-gray-800 text-base" style="font-size: 15px; line-height: 1.6;"></p> <!-- Default line-height -->
+        </div>
+        
+        <p class="text-sm text-gray-500 text-center">
+            Copyright 2024 Werkudara Group. All rights reserved.
+        </p>
+    </div>
+
+    <script>
+        const result = document.getElementById('result');
+        const recordingNotification = document.getElementById('recordingNotification'); 
+        let recognition;
+        let finalTranscript = ''; 
+        let lastFinalTranscript = ''; // Store the final transcript for comparison
+
+        try {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            recognition.continuous = true; 
+            recognition.interimResults = true; 
+            recognition.lang = 'id-ID'; 
+            recognition.onresult = (event) => {
+                let interimTranscript = ''; 
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript.trim();
+
+                    // Only append if the transcript is final and different from the last transcript
+                    if (event.results[i].isFinal && lastFinalTranscript !== transcript) {
+                        lastFinalTranscript = transcript; // Update the last final transcript
+                        finalTranscript += transcript + '<br>';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                result.innerHTML = finalTranscript + '<span class="text-gray-400">' + interimTranscript + '</span>';
+            };
+
+            recognition.onerror = (event) => {
+                result.innerHTML = 'Kesalahan: ' + event.error;
+            };
+        } catch (e) {
+            result.innerHTML = 'Speech Recognition API tidak didukung di browser ini.';
+        }
+
+        function startRecording() {
+            recognition.start();
+            recordingNotification.classList.remove('hidden');
+        }
+
+        function stopRecording() {
+            recognition.stop();
+            recordingNotification.classList.add('hidden');
+        }
+
+        function clearText() {
+            finalTranscript = ''; 
+            lastFinalTranscript = ''; // Clear the last final transcript
+            result.innerHTML = '';
+        }
+
+        function changeFontSize() {
+            const fontSize = document.getElementById('fontSize').value;
+            result.style.fontSize = fontSize + 'px';
+            result.style.lineHeight = (parseInt(fontSize) * 1.6) + 'px';
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        const firebaseConfig = {
+          apiKey: "AIzaSyDmV4SA8VvhJKFpD8EPrXHHf1CWxKWBzrk",
+          authDomain: "stotextwg.firebaseapp.com",
+          projectId: "stotextwg",
+          storageBucket: "stotextwg.appspot.com",
+          messagingSenderId: "901814237733",
+          appId: "1:901814237733:web:24359f09ff8cc75c6e9dcc"
+        };
+      
+        const app = initializeApp(firebaseConfig);
+    </script>
+</body>
+</html>
